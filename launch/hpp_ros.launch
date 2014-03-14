@@ -1,5 +1,5 @@
 <launch>
-  <param name="robot_description" command="cat $(find hrp2_14_description)/urdf/hrp2_14.urdf"/>
+  <param name="robot_description" command="cat $(find hrp2_14_description)/urdf/hrp2_14_capsule.urdf"/>
   <node name="robot_state_publisher"
 	pkg="robot_state_publisher"
 	type="state_publisher"

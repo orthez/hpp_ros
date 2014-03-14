@@ -17,4 +17,4 @@
 # hpp-ros.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-from robot_state_publisher import RobotStatePublisher
+from scene_publisher import ScenePublisher

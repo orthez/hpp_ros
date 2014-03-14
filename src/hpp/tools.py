@@ -15,19 +15,21 @@
 # hpp_ros.  If not, see
 # <http://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 2.8.3)
-project(hpp_ros)
-include(cmake/python.cmake)
+import time
 
-findpython()
-find_package(catkin REQUIRED COMPONENTS
-  geometry_msgs rostime sensor_msgs tf)
+class PathPlayer (object):
+    dt = 0.01
+    def __init__ (self, client, publisher) :
+        self.client = client
+        self.publisher = publisher
 
-catkin_package()
+    def __call__ (self, pathId) :
+        length = self.client.problem.pathLength (pathId)
+        t = 0
+        while t < length :
+            q = self.client.problem.configAtDistance (pathId, t)
+            self.publisher.robotConfig = q
+            self.publisher.publish ()
+            t += self.dt
+            time.sleep (self.dt)
 
-catkin_python_setup()
-
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-  )
-install(FILES src/hpp/tools.py DESTINATION ${PYTHON_SITELIB}/hpp)
