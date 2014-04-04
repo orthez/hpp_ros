@@ -27,55 +27,32 @@ from tf import TransformBroadcaster, transformations
 class ScenePublisher (object):
     def __init__ (self, jointNames):
         self.pubRobots = dict ()
-        self.pubObjects = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
         rospy.init_node ('hpp')
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
+        # Create constant transformation between R_odom and R_base_link (of the robot)
         self.odom_trans = TransformStamped ()
         self.odom_trans.header.frame_id = "odom";
         self.odom_trans.child_frame_id = "base_link"
-        self.obstacleMsg = dict ()
-
-    def addObject (self, name):
-        self.pubObjects [name] = rospy.Publisher ('/' + name, Marker)
-        self.obstacleMsg [name] = Marker ()
-        self.obstacleMsg [name].header.frame_id = "odom"
-        self.obstacleMsg [name].header.stamp = rospy.Time.now ()
-        self.obstacleMsg [name].type = Marker.SPHERE
-        self.obstacleMsg [name].action = Marker.ADD
-        self.obstacleMsg [name].lifetime = rospy.Duration ()
-        self.obstacleMsg [name].scale.x = 1.
-        self.obstacleMsg [name].scale.y = 1.
-        self.obstacleMsg [name].scale.z = 1.
-        self.obstacleMsg [name].color.r = 0
-        self.obstacleMsg [name].color.g = 1
-        self.obstacleMsg [name].color.b = 0
-        self.obstacleMsg [name].color.a = 1
-
-    def moveObject (self, name, cfg):
-        R = np.identity (4)
-        R [0,0:3] = cfg.rot [:3]
-        R [1,0:3] = cfg.rot [3:6]
-        R [2,0:3] = cfg.rot [6:9]
-        quat = transformations.quaternion_from_matrix (R)
-        self.obstacleMsg [name].pose.position.x = cfg.trs [0]
-        self.obstacleMsg [name].pose.position.y = cfg.trs [1]
-        self.obstacleMsg [name].pose.position.z = cfg.trs [2]
-        self.obstacleMsg [name].pose.orientation.x = quat [0]
-        self.obstacleMsg [name].pose.orientation.y = quat [1]
-        self.obstacleMsg [name].pose.orientation.z = quat [2]
-        self.obstacleMsg [name].pose.orientation.w = quat [3]
+        # Create constant transformation between R_odom and R_obstacle_base (of the obstacle, which is fixed in the world)
+        # considering that the obstacle is not articulated (no jointState js)
+        self.odom_trans_obstacle = TransformStamped ()
+        self.odom_trans_obstacle.header.frame_id = "odom";
+        self.odom_trans_obstacle.child_frame_id = "obstacle_base"
+        
 
     def publishObjects (self):
-        for name, p in self.pubObjects.iteritems ():
-            if not rospy.is_shutdown ():
-                p.publish (self.obstacleMsg [name])
+        if not rospy.is_shutdown ():
+            now = rospy.Time.now ()
+            self.broadcaster.sendTransform \
+                (self.obstacleConfig [0: 3], self.obstacleConfig [3: 7], now, "obstacle_base", "odom")
 
     def publish (self):
         self.publishRobots ()
         self.publishObjects ()
+
 
     def publishRobots (self):
         if not rospy.is_shutdown ():
@@ -87,9 +64,6 @@ class ScenePublisher (object):
             self.odom_trans.header.stamp.nsecs = now.nsecs
             self.odom_trans.header.seq = self.js.header.seq
 
-            self.odom_trans.transform.translation.x = self.robotConfig [0]
-            self.odom_trans.transform.translation.y = self.robotConfig [1]
-            self.odom_trans.transform.translation.z = self.robotConfig [2]
             self.odom_trans.transform.rotation = (self.robotConfig [4],
                                                   self.robotConfig [5],
                                                   self.robotConfig [6],
@@ -105,6 +79,12 @@ class ScenePublisher (object):
                  now, "base_link", "odom")
             self.pubRobots ['robot'].publish (self.js)
 
-    def __call__ (self, q):
+
+    def __call__ (self, q, q_obs):
         self.robotConfig = q
+        # Lines to get self.obstacleConfig in the correct order : ([q_obs[4], q_obs[5], q_obs[6], q_obs[3])
+        self.obstacleConfig = q_obs
+        self.q_tmp=q_obs[3]
+        self.obstacleConfig.pop(3)
+        self.obstacleConfig.append(self.q_tmp)
         self.publish ()
