@@ -36,10 +36,10 @@ class ScenePublisher (object):
         self.odom_trans = TransformStamped ()
         self.odom_trans.header.frame_id = "odom";
         self.odom_trans.child_frame_id = "base_link"
-        # Create constant transformation between R_odom and R_obstacle_base (of the obstacle, which is fixed in the world)
-        # considering that the obstacle is not articulated (no jointState js)
+        # Create constant transformation between R_map and R_obstacle_base of the obstacle. which is not  in the world)
+        # Here, the obstacle can move in R_map (see __call__) but is without any joint.
         self.odom_trans_obstacle = TransformStamped ()
-        self.odom_trans_obstacle.header.frame_id = "odom";
+        self.odom_trans_obstacle.header.frame_id = "map";
         self.odom_trans_obstacle.child_frame_id = "obstacle_base"
         
 
@@ -47,11 +47,11 @@ class ScenePublisher (object):
         if not rospy.is_shutdown ():
             now = rospy.Time.now ()
             self.broadcaster.sendTransform \
-                (self.obstacleConfig [0: 3], self.obstacleConfig [3: 7], now, "obstacle_base", "odom")
+                (self.obstacleConfig [0: 3], self.obstacleConfig [3: 7], now, "obstacle_base", "map")
 
     def publish (self):
-        self.publishRobots ()
         self.publishObjects ()
+        self.publishRobots ()
 
 
     def publishRobots (self):
@@ -80,7 +80,7 @@ class ScenePublisher (object):
             self.pubRobots ['robot'].publish (self.js)
 
 
-    def __call__ (self, q, q_obs):
+    def __call__ (self, q, q_obs):  # should create another function __call__ (self, q) to just call self.publishRobots () but not working (no method overloading in python ?)
         self.robotConfig = q
         # Lines to get self.obstacleConfig in the correct order : ([q_obs[4], q_obs[5], q_obs[6], q_obs[3])
         self.obstacleConfig = q_obs
