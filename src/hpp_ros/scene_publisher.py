@@ -80,12 +80,15 @@ class ScenePublisher (object):
             self.pubRobots ['robot'].publish (self.js)
 
 
-    def __call__ (self, q, q_obstacle):  # should create another function " __call__ (self, q) " to just call self.publishRobots () but not working (no method overloading in python ?)
-        # WARNING : don't use q or q_obstacle names in the test script
-        self.robotConfig = q
-        # Lines to get self.obstacleConfig in the correct order : ([q_obs[4], q_obs[5], q_obs[6], q_obs[3])
-        self.obstacleConfig = q_obstacle
-        self.q_tmp=q_obstacle [3]
-        self.obstacleConfig.pop (3)
-        self.obstacleConfig.append (self.q_tmp)
-        self.publish ()
+    def __call__ (self, *args):
+        try:
+            self.robotConfig = args[0]
+            # Lines to get self.obstacleConfig in the correct order : (q_obs[4], q_obs[5], q_obs[6], q_obs[3])
+            self.obstacleConfig = args[1]
+            self.q_tmp = (args [1]) [3]
+            self.obstacleConfig.pop (3)
+            self.obstacleConfig.append (self.q_tmp)
+            self.publish ()
+        except:
+            self.robotConfig = args[0]
+            self.publish ()
