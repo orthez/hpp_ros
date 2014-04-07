@@ -32,15 +32,15 @@ class ScenePublisher (object):
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
-        # Create constant transformation between R_odom and R_base_link (of the robot)
+        # Create constant transformation between the odom frame and the robot's base link frame.
         self.odom_trans = TransformStamped ()
         self.odom_trans.header.frame_id = "odom";
         self.odom_trans.child_frame_id = "base_link"
-        # Create constant transformation between R_map and R_obstacle_base of the obstacle. which is not  in the world)
-        # Here, the obstacle can move in R_map (see __call__) but is without any joint.
-        self.odom_trans_obstacle = TransformStamped ()
-        self.odom_trans_obstacle.header.frame_id = "map";
-        self.odom_trans_obstacle.child_frame_id = "obstacle_base"
+        # Create constant transformation between the map frame and the obstacle frame.
+        # Here, the obstacle can move in the map frame (see __call__, with the move q_obs) but is without any joint.
+        self.trans_map_obstacle = TransformStamped ()
+        self.trans_map_obstacle.header.frame_id = "map";
+        self.trans_map_obstacle.child_frame_id = "obstacle_base"
         
 
     def publishObjects (self):
@@ -80,11 +80,12 @@ class ScenePublisher (object):
             self.pubRobots ['robot'].publish (self.js)
 
 
-    def __call__ (self, q, q_obs):  # should create another function __call__ (self, q) to just call self.publishRobots () but not working (no method overloading in python ?)
+    def __call__ (self, q, q_obstacle):  # should create another function " __call__ (self, q) " to just call self.publishRobots () but not working (no method overloading in python ?)
+        # WARNING : don't use q or q_obstacle names in the test script
         self.robotConfig = q
         # Lines to get self.obstacleConfig in the correct order : ([q_obs[4], q_obs[5], q_obs[6], q_obs[3])
-        self.obstacleConfig = q_obs
-        self.q_tmp=q_obs[3]
-        self.obstacleConfig.pop(3)
-        self.obstacleConfig.append(self.q_tmp)
+        self.obstacleConfig = q_obstacle
+        self.q_tmp=q_obstacle [3]
+        self.obstacleConfig.pop (3)
+        self.obstacleConfig.append (self.q_tmp)
         self.publish ()
