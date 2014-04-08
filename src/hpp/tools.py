@@ -29,7 +29,7 @@ class PathPlayer (object):
         while t < length :
             q = self.client.problem.configAtDistance (pathId, t)
             self.publisher.robotConfig = q
-            self.publisher.publish ()
+            self.publisher.publishRobots ()
             t += self.dt
             time.sleep (self.dt)
 

@@ -91,4 +91,4 @@ class ScenePublisher (object):
             self.publish ()
         except:
             self.robotConfig = args[0]
-            self.publish ()
+            self.publishRobots ()
