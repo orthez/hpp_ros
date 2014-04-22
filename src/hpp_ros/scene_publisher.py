@@ -24,6 +24,12 @@ from geometry_msgs.msg import TransformStamped
 from visualization_msgs.msg import Marker
 from tf import TransformBroadcaster, transformations
 
+class Obstacle (object):
+    def __init__ (self, name, frameId):
+        self.name = name
+        self.frameId = frameId
+        self.position = (0,0,0,1,0,0,0)
+
 class ScenePublisher (object):
     def __init__ (self, jointNames):
         self.pubRobots = dict ()
@@ -32,22 +38,40 @@ class ScenePublisher (object):
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
-        # Create constant transformation between the odom frame and the robot's base link frame.
+        # Create constant transformation between the odom frame and the robot
+        # base link frame.
         self.odom_trans = TransformStamped ()
         self.odom_trans.header.frame_id = "odom";
         self.odom_trans.child_frame_id = "base_link"
-        # Create constant transformation between the map frame and the obstacle frame.
-        # Here, the obstacle can move in the map frame (see __call__, with the move q_obs) but is without any joint.
+        # Create constant transformation between the map frame and the obstacle
+        # frame.
+        # Here, the obstacle can move in the map frame (see __call__, with the
+        # move q_obs) but is without any joint.
         self.trans_map_obstacle = TransformStamped ()
         self.trans_map_obstacle.header.frame_id = "map";
         self.trans_map_obstacle.child_frame_id = "obstacle_base"
-        
+        self.objects = dict ()
+
+    def addObject (self, name, frameId):
+        """
+        Add an object with given name and attached to given frame
+        """
+        self.objects [name] = Obstacle (name, frameId)
 
     def publishObjects (self):
         if not rospy.is_shutdown ():
             now = rospy.Time.now ()
-            self.broadcaster.sendTransform \
-                (self.obstacleConfig [0: 3], self.obstacleConfig [3: 7], now, "obstacle_base", "map")
+            for n, obj in self.objects.iteritems ():
+                self.broadcaster.sendTransform \
+                    (obj.position [0:3], (obj.position [4],
+                                          obj.position [5],
+                                          obj.position [6],
+                                          obj.position [3]), now,
+                     obj.frameId, "map")
+
+    def moveObject (self, name, position):
+        self.objects [name].position = tuple (position.trs [0:3]) + \
+            tuple (position.quat [0:4])
 
     def publish (self):
         self.publishObjects ()
@@ -80,15 +104,6 @@ class ScenePublisher (object):
             self.pubRobots ['robot'].publish (self.js)
 
 
-    def __call__ (self, *args):
-        try:
-            self.robotConfig = args[0]
-            # Lines to get self.obstacleConfig in the correct order : (q_obs[4], q_obs[5], q_obs[6], q_obs[3])
-            self.obstacleConfig = args[1]
-            self.q_tmp = (args [1]) [3]
-            self.obstacleConfig.pop (3)
-            self.obstacleConfig.append (self.q_tmp)
-            self.publish ()
-        except:
-            self.robotConfig = args[0]
-            self.publishRobots ()
+    def __call__ (self, args):
+        self.robotConfig = args
+        self.publish ()
