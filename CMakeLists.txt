@@ -28,6 +28,6 @@ catkin_package()
 catkin_python_setup()
 
 install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
   )
 install(FILES src/hpp/tools.py DESTINATION ${PYTHON_SITELIB}/hpp)
