@@ -70,8 +70,7 @@ class ScenePublisher (object):
                      obj.frameId, "map")
 
     def moveObject (self, name, position):
-        self.objects [name].position = tuple (position.trs [0:3]) + \
-            tuple (position.quat [0:4])
+        self.objects [name].position = position
 
     def publish (self):
         self.publishObjects ()
