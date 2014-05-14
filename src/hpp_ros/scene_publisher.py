@@ -20,9 +20,12 @@
 from math import sin, cos
 import numpy as np
 import rospy
+import time
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import TransformStamped
 from visualization_msgs.msg import Marker
+from visualization_msgs.msg import MarkerArray
+from geometry_msgs.msg import Point
 from tf import TransformBroadcaster, transformations
 
 class Obstacle (object):
@@ -70,6 +73,8 @@ class ScenePublisher (object):
             raise RuntimeError ("Unknow root joint type: " + self.rootJointType)
         self.pubRobots = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
+        self.pubRobots ['marker'] = \
+            rospy.Publisher ('/visualization_marker_array', MarkerArray)
         rospy.init_node ('hpp', log_level=rospy.FATAL )
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
@@ -77,7 +82,7 @@ class ScenePublisher (object):
         # Create constant transformation between the odom frame and the robot
         # base link frame.
         self.odom_trans = TransformStamped ()
-        self.odom_trans.header.frame_id = "odom";
+        self.odom_trans.header.frame_id = "l_sole";
         self.odom_trans.child_frame_id = "base_link"
         # Create constant transformation between the map frame and the obstacle
         # frame.
@@ -87,6 +92,8 @@ class ScenePublisher (object):
         self.trans_map_obstacle.header.frame_id = "map";
         self.trans_map_obstacle.child_frame_id = "obstacle_base"
         self.objects = dict ()
+        self.markerArray = MarkerArray()
+        self.oid = 0
 
     def addObject (self, name, frameId):
         """
@@ -94,9 +101,90 @@ class ScenePublisher (object):
         """
         self.objects [name] = Obstacle (name, frameId)
 
+    def addPolygonFilled(self, dist, points):
+        oid = self.oid+1
+        name = "/polygonFilled"+str(self.oid)
+        marker = Marker()
+        marker.id = self.oid
+        marker.ns = "/polygonFilled"
+        marker.header.frame_id = name
+        marker.type = marker.TRIANGLE_LIST
+        marker.action = marker.ADD
+        marker.scale.x = 1
+        marker.scale.y = 1
+        marker.scale.z = 1
+        marker.color.r = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 0.0
+        marker.color.a = 1.0
+        marker.pose.orientation.w = 1.0
+        marker.pose.position.x = 0
+        marker.pose.position.y = 0
+        marker.pose.position.z = 0
+        marker.points = []
+        for i in range(0,len(points)-2,1):
+                pt = Point(dist, points[0][0], points[0][1])
+                marker.points.append(pt)
+                pt = Point(dist, points[i+1][0], points[i+1][1])
+                marker.points.append(pt)
+                pt = Point(dist, points[i+2][0], points[i+2][1])
+                marker.points.append(pt)
+        self.markerArray.markers.append(marker)
+
+    def addPolygon(self, dist, points):
+        self.oid = self.oid+1
+        self.name = "/polygon"+str(self.oid)
+        self.marker = Marker()
+        self.marker.id = self.oid
+        self.marker.ns = "/polygon"
+        self.marker.header.frame_id = self.name
+        self.marker.type = self.marker.LINE_STRIP
+        self.marker.action = self.marker.ADD
+        self.marker.scale.x = 0.05
+        self.marker.color.r = 1.0
+        self.marker.color.g = 1.0
+        self.marker.color.b = 0.0
+        self.marker.color.a = 1.0
+        self.marker.pose.orientation.w = 1.0
+        self.marker.pose.position.x = 0
+        self.marker.pose.position.y = 0
+        self.marker.pose.position.z = 0
+        self.marker.points = []
+        for p in points:
+                pt = Point()
+                pt.x = dist; pt.y = p[0]; pt.z = p[1]
+                self.marker.points.append(pt)
+        self.markerArray.markers.append(self.marker)
+
+    def addSphere(self, x, y, z):
+        self.addSphere(x, y, z, 0.05, 0.05, 0.05)
+
+    def addSphere(self, x, y, z, sx, sy, sz):
+        self.oid = self.oid+1
+        self.name = "/sphere"+str(self.oid)
+        self.marker = Marker()
+        self.marker.id = self.oid
+        self.marker.ns = "/shapes"
+        self.marker.header.frame_id = self.name
+        self.marker.type = self.marker.SPHERE
+        self.marker.action = self.marker.ADD
+        self.marker.scale.x = sx
+        self.marker.scale.y = sy
+        self.marker.scale.z = sz
+        self.marker.color.r = 1.0
+        self.marker.color.g = 0.0
+        self.marker.color.b = 1.0
+        self.marker.color.a = 1.0
+        self.marker.pose.orientation.w = 1.0
+        self.marker.pose.position.x = x
+        self.marker.pose.position.y = y
+        self.marker.pose.position.z = z
+        self.markerArray.markers.append(self.marker)
+
     def publishObjects (self):
         if not rospy.is_shutdown ():
             now = rospy.Time.now ()
+            r = rospy.Rate(10)
             for n, obj in self.objects.iteritems ():
                 self.broadcaster.sendTransform \
                     (obj.position [0:3], (obj.position [4],
@@ -104,6 +192,18 @@ class ScenePublisher (object):
                                           obj.position [6],
                                           obj.position [3]), now,
                      obj.frameId, "map")
+            for m in self.markerArray.markers:
+                    #pos = (m.pose.position.x, m.pose.position.y, m.pose.position.z)
+                    pos = (0,0,0)
+                    ori = ( m.pose.orientation.x,  \
+                            m.pose.orientation.y, \
+                            m.pose.orientation.z, \
+                            m.pose.orientation.w)
+                    self.broadcaster.sendTransform \
+                        (pos, ori, now, m.header.frame_id, "/l_sole")
+
+            self.pubRobots ['marker'].publish (self.markerArray)
+
 
     def moveObject (self, name, position):
         self.objects [name].position = position
@@ -129,9 +229,14 @@ class ScenePublisher (object):
             rospy.loginfo (self.odom_trans)
             rospy.loginfo (self.js)
             self.broadcaster.sendTransform \
+<<<<<<< HEAD
                 (self.odom_trans.transform.translation,
                  self.odom_trans.transform.rotation,
                  now, self.tf_root, "odom")
+=======
+                (self.robotConfig [0: 3], self.odom_trans.transform.rotation,
+                 now, "base_link", "l_sole")
+>>>>>>> 7e1fc2b... added polygon filled and sphere markers for display in rviz
             self.pubRobots ['robot'].publish (self.js)
 
 
