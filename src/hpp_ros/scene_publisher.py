@@ -115,7 +115,7 @@ class ScenePublisher (object):
         marker.scale.z = 1
         marker.color.r = 1.0
         marker.color.g = 1.0
-        marker.color.b = 0.0
+        marker.color.b = 1.0
         marker.color.a = 1.0
         marker.pose.orientation.w = 1.0
         marker.pose.position.x = 0
@@ -140,9 +140,11 @@ class ScenePublisher (object):
         self.marker.header.frame_id = self.name
         self.marker.type = self.marker.LINE_STRIP
         self.marker.action = self.marker.ADD
-        self.marker.scale.x = 0.05
+        self.marker.scale.x = 0.02
+        self.marker.scale.y = 1
+        self.marker.scale.z = 1
         self.marker.color.r = 1.0
-        self.marker.color.g = 1.0
+        self.marker.color.g = 0.0
         self.marker.color.b = 0.0
         self.marker.color.a = 1.0
         self.marker.pose.orientation.w = 1.0
@@ -154,6 +156,11 @@ class ScenePublisher (object):
                 pt = Point()
                 pt.x = dist; pt.y = p[0]; pt.z = p[1]
                 self.marker.points.append(pt)
+        #connect last marker to first marker
+        pt = Point()
+        pt.x = dist; pt.y = points[0][0]; pt.z = points[0][1]
+        self.marker.points.append(pt)
+
         self.markerArray.markers.append(self.marker)
 
     def addSphere(self, x, y, z):
