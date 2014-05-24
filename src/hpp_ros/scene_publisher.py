@@ -59,6 +59,7 @@ def computeRobotPositionPlanar (self):
 class ScenePublisher (object):
     def __init__ (self, robot):
         self.tf_root = robot.tf_root
+        self.referenceFrame = "odom"
         self.rootJointType = robot.rootJointType
         if self.rootJointType == "freeflyer":
             jointNames = robot.jointNames [4:]
@@ -236,14 +237,9 @@ class ScenePublisher (object):
             rospy.loginfo (self.odom_trans)
             rospy.loginfo (self.js)
             self.broadcaster.sendTransform \
-<<<<<<< HEAD
                 (self.odom_trans.transform.translation,
                  self.odom_trans.transform.rotation,
-                 now, self.tf_root, "odom")
-=======
-                (self.robotConfig [0: 3], self.odom_trans.transform.rotation,
-                 now, "base_link", "l_sole")
->>>>>>> 7e1fc2b... added polygon filled and sphere markers for display in rviz
+                 now, self.tf_root, self.referenceFrame)
             self.pubRobots ['robot'].publish (self.js)
 
 
