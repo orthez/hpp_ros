@@ -35,6 +35,7 @@ class Obstacle (object):
 
 class ScenePublisher (object):
     def __init__ (self, jointNames):
+        self.referenceFrame = "odom"
         self.pubRobots = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
         self.pubRobots ['marker'] = rospy.Publisher ('/visualization_marker_array', MarkerArray)
@@ -45,7 +46,7 @@ class ScenePublisher (object):
         # Create constant transformation between the odom frame and the robot
         # base link frame.
         self.odom_trans = TransformStamped ()
-        self.odom_trans.header.frame_id = "l_sole";
+        self.odom_trans.header.frame_id = self.referenceFrame
         self.odom_trans.child_frame_id = "base_link"
         # Create constant transformation between the map frame and the obstacle
         # frame.
@@ -170,7 +171,7 @@ class ScenePublisher (object):
                             m.pose.orientation.z, \
                             m.pose.orientation.w)
                     self.broadcaster.sendTransform \
-                        (pos, ori, now, m.header.frame_id, "/l_sole")
+                        (pos, ori, now, m.header.frame_id, "/"+self.referenceFrame)
 
             self.pubRobots ['marker'].publish (self.markerArray)
 
@@ -205,7 +206,7 @@ class ScenePublisher (object):
             rospy.loginfo (self.js)
             self.broadcaster.sendTransform \
                 (self.robotConfig [0: 3], self.odom_trans.transform.rotation,
-                 now, "base_link", "l_sole")
+                 now, "base_link", self.referenceFrame)
             self.pubRobots ['robot'].publish (self.js)
 
 
