@@ -70,7 +70,7 @@ class ScenePublisher (object):
             raise RuntimeError ("Unknow root joint type: " + self.rootJointType)
         self.pubRobots = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
-        rospy.init_node ('hpp')
+        rospy.init_node ('hpp', log_level=rospy.FATAL )
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
