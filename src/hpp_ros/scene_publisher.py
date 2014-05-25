@@ -39,7 +39,7 @@ class ScenePublisher (object):
         self.pubRobots = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
         self.pubRobots ['marker'] = rospy.Publisher ('/visualization_marker_array', MarkerArray)
-        rospy.init_node ('hpp')
+        rospy.init_node ('hpp', log_level=rospy.FATAL )
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
