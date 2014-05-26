@@ -83,8 +83,8 @@ class ScenePublisher (object):
         # Create constant transformation between the odom frame and the robot
         # base link frame.
         self.odom_trans = TransformStamped ()
-        self.odom_trans.header.frame_id = "l_sole";
-        self.odom_trans.child_frame_id = "base_link"
+        self.odom_trans.header.frame_id = self.referenceFrame;
+        self.odom_trans.child_frame_id = self.tf_root
         # Create constant transformation between the map frame and the obstacle
         # frame.
         # Here, the obstacle can move in the map frame (see __call__, with the
