@@ -17,6 +17,7 @@
 # hpp-ros.  If not, see
 # <http://www.gnu.org/licenses/>.
 
+from math import sin, cos
 import numpy as np
 import rospy
 from sensor_msgs.msg import JointState
@@ -30,8 +31,43 @@ class Obstacle (object):
         self.frameId = frameId
         self.position = (0,0,0,1,0,0,0)
 
+def computeRobotPositionAnchor (self):
+    self.odom_trans.transform.rotation = (0.0, 0.0, 0, 1)
+    self.odom_trans.transform.translation = (0.0, 0.0, 0.0)
+    self.js.position = self.robotConfig
+
+def computeRobotPositionFreeflyer (self):
+    self.odom_trans.transform.rotation = (self.robotConfig [4],
+                                          self.robotConfig [5],
+                                          self.robotConfig [6],
+                                          self.robotConfig [3])
+    self.odom_trans.transform.translation = (self.robotConfig [0],
+                                             self.robotConfig [1],
+                                             self.robotConfig [2])
+    self.js.position = self.robotConfig[7:]
+
+def computeRobotPositionPlanar (self):
+    theta = .5*self.robotConfig [2]
+    self.odom_trans.transform.rotation = (0 , 0, sin (theta), cos (theta))
+    self.odom_trans.transform.translation = \
+        (self.robotConfig [0], self.robotConfig [1], 0)
+    self.js.position = self.robotConfig[3:]
+
 class ScenePublisher (object):
-    def __init__ (self, jointNames):
+    def __init__ (self, robot):
+        self.tf_root = robot.tf_root
+        self.rootJointType = robot.rootJointType
+        if self.rootJointType == "freeflyer":
+            jointNames = robot.jointNames [4:]
+            self.computeRobotPosition = computeRobotPositionFreeflyer
+        elif self.rootJointType == "planar":
+            jointNames = robot.jointNames [3:]
+            self.computeRobotPosition = computeRobotPositionPlanar
+        elif self.rootJointType == "anchor":
+            jointNames = robot.jointNames
+            self.computeRobotPosition = computeRobotPositionAnchor
+        else:
+            raise RuntimeError ("Unknow root joint type: " + self.rootJointType)
         self.pubRobots = dict ()
         self.pubRobots ['robot'] = rospy.Publisher ('/joint_states', JointState)
         rospy.init_node ('hpp')
@@ -86,20 +122,16 @@ class ScenePublisher (object):
             self.odom_trans.header.stamp.secs = now.secs
             self.odom_trans.header.stamp.nsecs = now.nsecs
             self.odom_trans.header.seq = self.js.header.seq
-
-            self.odom_trans.transform.rotation = (self.robotConfig [4],
-                                                  self.robotConfig [5],
-                                                  self.robotConfig [6],
-                                                  self.robotConfig [3])
-            self.js.position = self.robotConfig[7:]
-            self.js.velocity = 40*[0.,]
-            self.js.effort = 40*[0.,]
+            self.computeRobotPosition (self)
+            self.js.velocity = len (self.js.position)*[0.,]
+            self.js.effort = len (self.js.position)*[0.,]
 
             rospy.loginfo (self.odom_trans)
             rospy.loginfo (self.js)
             self.broadcaster.sendTransform \
-                (self.robotConfig [0: 3], self.odom_trans.transform.rotation,
-                 now, "base_link", "odom")
+                (self.odom_trans.transform.translation,
+                 self.odom_trans.transform.rotation,
+                 now, self.tf_root, "odom")
             self.pubRobots ['robot'].publish (self.js)
 
 
