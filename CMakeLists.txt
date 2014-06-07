@@ -27,18 +27,8 @@ catkin_package()
 
 catkin_python_setup()
 
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+install(Files launch/hpp_ros.launch
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   )
-install(DIRECTORY urdf
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
-install(DIRECTORY srdf
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  )
-install (FILES
-  src/hpp/corbaserver/pr2/robot.py
-  src/hpp/corbaserver/pr2/__init__.py
-  DESTINATION ${PYTHON_SITELIB}/hpp/corbaserver/pr2)
 
 install(FILES src/hpp/tools.py DESTINATION ${PYTHON_SITELIB}/hpp)
