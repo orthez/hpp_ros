@@ -31,4 +31,3 @@ install(FILES launch/hpp_ros.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   )
 
-install(FILES src/hpp/tools.py DESTINATION ${PYTHON_SITELIB}/hpp)

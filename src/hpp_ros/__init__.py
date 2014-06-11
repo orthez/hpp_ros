@@ -18,3 +18,4 @@
 # <http://www.gnu.org/licenses/>.
 
 from scene_publisher import ScenePublisher
+from path_player import PathPlayer
