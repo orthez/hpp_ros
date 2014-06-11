@@ -35,31 +35,31 @@ class Obstacle (object):
         self.position = (0,0,0,1,0,0,0)
 
 def computeRobotPositionAnchor (self):
-    self.odom_trans.transform.rotation = (0.0, 0.0, 0, 1)
-    self.odom_trans.transform.translation = (0.0, 0.0, 0.0)
+    self.transform.transform.rotation = (0.0, 0.0, 0, 1)
+    self.transform.transform.translation = (0.0, 0.0, 0.0)
     self.js.position = self.robotConfig
 
 def computeRobotPositionFreeflyer (self):
-    self.odom_trans.transform.rotation = (self.robotConfig [4],
+    self.transform.transform.rotation = (self.robotConfig [4],
                                           self.robotConfig [5],
                                           self.robotConfig [6],
                                           self.robotConfig [3])
-    self.odom_trans.transform.translation = (self.robotConfig [0],
+    self.transform.transform.translation = (self.robotConfig [0],
                                              self.robotConfig [1],
                                              self.robotConfig [2])
     self.js.position = self.robotConfig[7:]
 
 def computeRobotPositionPlanar (self):
     theta = .5*self.robotConfig [2]
-    self.odom_trans.transform.rotation = (0 , 0, sin (theta), cos (theta))
-    self.odom_trans.transform.translation = \
+    self.transform.transform.rotation = (0 , 0, sin (theta), cos (theta))
+    self.transform.transform.translation = \
         (self.robotConfig [0], self.robotConfig [1], 0)
     self.js.position = self.robotConfig[3:]
 
 class ScenePublisher (object):
     def __init__ (self, robot):
         self.tf_root = robot.tf_root
-        self.referenceFrame = "odom"
+        self.referenceFrame = "map"
         self.rootJointType = robot.rootJointType
         if self.rootJointType == "freeflyer":
             jointNames = robot.jointNames [4:]
@@ -80,11 +80,11 @@ class ScenePublisher (object):
         self.broadcaster = TransformBroadcaster ()
         self.js = JointState ()
         self.js.name = jointNames
-        # Create constant transformation between the odom frame and the robot
+        # Create constant transformation between the map frame and the robot
         # base link frame.
-        self.odom_trans = TransformStamped ()
-        self.odom_trans.header.frame_id = self.referenceFrame;
-        self.odom_trans.child_frame_id = self.tf_root
+        self.transform = TransformStamped ()
+        self.transform.header.frame_id = self.referenceFrame;
+        self.transform.child_frame_id = self.tf_root
         # Create constant transformation between the map frame and the obstacle
         # frame.
         # Here, the obstacle can move in the map frame (see __call__, with the
@@ -227,18 +227,18 @@ class ScenePublisher (object):
             self.js.header.stamp.secs = now.secs
             self.js.header.stamp.nsecs = now.nsecs
             self.js.header.seq += 1
-            self.odom_trans.header.stamp.secs = now.secs
-            self.odom_trans.header.stamp.nsecs = now.nsecs
-            self.odom_trans.header.seq = self.js.header.seq
+            self.transform.header.stamp.secs = now.secs
+            self.transform.header.stamp.nsecs = now.nsecs
+            self.transform.header.seq = self.js.header.seq
             self.computeRobotPosition (self)
             self.js.velocity = len (self.js.position)*[0.,]
             self.js.effort = len (self.js.position)*[0.,]
 
-            rospy.loginfo (self.odom_trans)
+            rospy.loginfo (self.transform)
             rospy.loginfo (self.js)
             self.broadcaster.sendTransform \
-                (self.odom_trans.transform.translation,
-                 self.odom_trans.transform.rotation,
+                (self.transform.transform.translation,
+                 self.transform.transform.rotation,
                  now, self.tf_root, self.referenceFrame)
             self.pubRobots ['robot'].publish (self.js)
 
