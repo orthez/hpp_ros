@@ -56,6 +56,15 @@ def computeRobotPositionPlanar (self):
         (self.robotConfig [0], self.robotConfig [1], 0)
     self.js.position = self.robotConfig[3:]
 
+## Display of robot and obstacle configurations in Rviz
+#
+#  This class implements
+#  \li a tranform broadcaster that broadcasts the position of the robot root
+#      link with respect to the global frame "map",
+#  \li a joint state publisher that publishes the joint positions. These joint
+#      positions are read by a node of type "robot_state_publisher" that
+#      computes the relative positions of all links of the robot. Rviz then
+#      displays the positions of the links.
 class ScenePublisher (object):
     def __init__ (self, robot):
         self.tf_root = robot.tf_root

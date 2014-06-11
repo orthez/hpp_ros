@@ -16,10 +16,19 @@
 # <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 2.8.3)
+
 project(hpp_ros)
+include(cmake/base.cmake)
 include(cmake/python.cmake)
 
+set(PROJECT_DESCRIPTION
+  "Bridge between hpp and ros."
+)
+set(PROJECT_URL "")
+
 findpython()
+setup_project()
+
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs rostime sensor_msgs tf)
 
