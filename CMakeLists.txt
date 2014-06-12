@@ -40,3 +40,4 @@ install(FILES launch/hpp_ros.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   )
 
+setup_project_finalize()
