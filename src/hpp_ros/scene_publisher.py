@@ -111,7 +111,92 @@ class ScenePublisher (object):
         """
         self.objects [name] = Obstacle (name, frameId)
 
-    def addPolygonFilled(self, dist, points):
+    def addWallAroundHole(self, points):
+        oid = self.oid+1
+        name = "/wallAroundHole"+str(self.oid)
+        marker = Marker()
+        marker.id = self.oid
+        marker.ns = "/wallAroundHole"
+        marker.header.frame_id = name
+        marker.type = marker.TRIANGLE_LIST
+        marker.action = marker.ADD
+        marker.scale.x = 1
+        marker.scale.y = 1
+        marker.scale.z = 1
+        marker.color.r = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 1.0
+        marker.color.a = 1.0
+        marker.pose.orientation.w = 1.0
+        marker.pose.position.x = 0
+        marker.pose.position.y = 0
+        marker.pose.position.z = 0
+        marker.points = []
+
+        # compute wall elements
+        ## get the most left/right/upper/lower pts in points
+        lxidx,lyidx,lzidx=np.argmin(points,0)
+        uxidx,uyidx,uzidx=np.argmax(points,0)
+        hl = [0.0, points[lyidx][1], points[lyidx][2]]
+        hr = [0.0, points[uyidx][1], points[uyidx][2]]
+        hu = [0.0, points[uzidx][1], points[uzidx][2]]
+        hb = [0.0, points[lzidx][1], points[lzidx][2]]
+
+        #wall left low, left up, right low, right up
+        wll = [0.0,-2.0,-1.0]
+        wlu = [0.0,-2.0, 2.0]
+        wrl = [0.0, 2.0,-1.0]
+        wru = [0.0, 2.0, 2.0]
+
+        if uzidx > lyidx:
+                wluc = points[uzidx:]+points[:lyidx+1]
+        else:
+                wluc = points[uzidx:lyidx]
+
+        wllc = points[lyidx:lzidx+1]
+        wrlc = points[lzidx:uyidx+1]
+        wruc = points[uyidx:uzidx+1]
+
+        print lyidx,lzidx,uyidx,uzidx
+
+        for i in range(0,len(wluc)-1,1):
+          marker.points.append( Point( wlu[0], wlu[1], wlu[2]))
+          marker.points.append( Point( wluc[i][0], wluc[i][1], wluc[i][2]))
+          marker.points.append( Point( wluc[i+1][0], wluc[i+1][1], wluc[i+1][2]))
+        for i in range(0,len(wllc)-1,1):
+          marker.points.append( Point( wll[0], wll[1], wll[2]))
+          marker.points.append( Point( wllc[i][0], wllc[i][1], wllc[i][2]))
+          marker.points.append( Point( wllc[i+1][0], wllc[i+1][1], wllc[i+1][2]))
+        for i in range(0,len(wrlc)-1,1):
+          marker.points.append( Point( wrl[0], wrl[1], wrl[2]))
+          marker.points.append( Point( wrlc[i][0], wrlc[i][1], wrlc[i][2]))
+          marker.points.append( Point( wrlc[i+1][0], wrlc[i+1][1], wrlc[i+1][2]))
+        for i in range(0,len(wruc)-1,1):
+          marker.points.append( Point( wru[0], wru[1], wru[2]))
+          marker.points.append( Point( wruc[i][0], wruc[i][1], wruc[i][2]))
+          marker.points.append( Point( wruc[i+1][0], wruc[i+1][1], wruc[i+1][2]))
+
+        #connect wall corners to outer points
+        marker.points.append( Point(wll[0], wll[1], wll[2]) )
+        marker.points.append( Point(hl [0], hl [1], hl [2]) )
+        marker.points.append( Point(wlu[0], wlu[1], wlu[2]) )
+
+        marker.points.append( Point(wll[0], wll[1], wll[2]) )
+        marker.points.append( Point(hb [0], hb [1], hb [2]) )
+        marker.points.append( Point(wrl[0], wrl[1], wrl[2]) )
+
+        marker.points.append( Point(wru[0], wru[1], wru[2]) )
+        marker.points.append( Point(hu [0], hu [1], hu [2]) )
+        marker.points.append( Point(wlu[0], wlu[1], wlu[2]) )
+
+        marker.points.append( Point(wru[0], wru[1], wru[2]) )
+        marker.points.append( Point(hr [0], hr [1], hr [2]) )
+        marker.points.append( Point(wrl[0], wrl[1], wrl[2]) )
+
+        self.markerArray.markers.append(marker)
+
+
+    def addPolygonFilled(self, points):
         oid = self.oid+1
         name = "/polygonFilled"+str(self.oid)
         marker = Marker()
@@ -133,15 +218,15 @@ class ScenePublisher (object):
         marker.pose.position.z = 0
         marker.points = []
         for i in range(0,len(points)-2,1):
-                pt = Point(dist, points[0][0], points[0][1])
+                pt = Point(points[0][0], points[0][1], points[0][2])
                 marker.points.append(pt)
-                pt = Point(dist, points[i+1][0], points[i+1][1])
+                pt = Point(points[i+1][0], points[i+1][1], points[i+1][2])
                 marker.points.append(pt)
-                pt = Point(dist, points[i+2][0], points[i+2][1])
+                pt = Point(points[i+2][0], points[i+2][1], points[i+2][2])
                 marker.points.append(pt)
         self.markerArray.markers.append(marker)
 
-    def addPolygon(self, dist, points):
+    def addPolygon(self, points, linewidth=0.02):
         self.oid = self.oid+1
         self.name = "/polygon"+str(self.oid)
         self.marker = Marker()
@@ -150,7 +235,7 @@ class ScenePublisher (object):
         self.marker.header.frame_id = self.name
         self.marker.type = self.marker.LINE_STRIP
         self.marker.action = self.marker.ADD
-        self.marker.scale.x = 0.02
+        self.marker.scale.x = linewidth
         self.marker.scale.y = 1
         self.marker.scale.z = 1
         self.marker.color.r = 1.0
@@ -164,11 +249,11 @@ class ScenePublisher (object):
         self.marker.points = []
         for p in points:
                 pt = Point()
-                pt.x = dist; pt.y = p[0]; pt.z = p[1]
+                pt.x = p[0]; pt.y = p[1]; pt.z = p[2]
                 self.marker.points.append(pt)
         #connect last marker to first marker
         pt = Point()
-        pt.x = dist; pt.y = points[0][0]; pt.z = points[0][1]
+        pt.x = points[0][0]; pt.y = points[0][1]; pt.z = points[0][2]
         self.marker.points.append(pt)
 
         self.markerArray.markers.append(self.marker)
@@ -217,7 +302,7 @@ class ScenePublisher (object):
                             m.pose.orientation.z, \
                             m.pose.orientation.w)
                     self.broadcaster.sendTransform \
-                        (pos, ori, now, m.header.frame_id, "/l_sole")
+                        (pos, ori, now, m.header.frame_id, "/"+self.referenceFrame)
 
             self.pubRobots ['marker'].publish (self.markerArray)
 
