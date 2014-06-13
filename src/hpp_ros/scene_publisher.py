@@ -217,7 +217,7 @@ class ScenePublisher (object):
                             m.pose.orientation.z, \
                             m.pose.orientation.w)
                     self.broadcaster.sendTransform \
-                        (pos, ori, now, m.header.frame_id, "/l_sole")
+                        (pos, ori, now, m.header.frame_id, "/"+self.referenceFrame)
 
             self.pubRobots ['marker'].publish (self.markerArray)
 
