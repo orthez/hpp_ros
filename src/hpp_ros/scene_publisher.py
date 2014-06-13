@@ -111,7 +111,7 @@ class ScenePublisher (object):
         """
         self.objects [name] = Obstacle (name, frameId)
 
-    def addPolygonFilled(self, dist, points):
+    def addPolygonFilled(self, points):
         oid = self.oid+1
         name = "/polygonFilled"+str(self.oid)
         marker = Marker()
@@ -133,15 +133,15 @@ class ScenePublisher (object):
         marker.pose.position.z = 0
         marker.points = []
         for i in range(0,len(points)-2,1):
-                pt = Point(dist, points[0][0], points[0][1])
+                pt = Point(points[0][0], points[0][1], points[0][2])
                 marker.points.append(pt)
-                pt = Point(dist, points[i+1][0], points[i+1][1])
+                pt = Point(points[i+1][0], points[i+1][1], points[i+1][2])
                 marker.points.append(pt)
-                pt = Point(dist, points[i+2][0], points[i+2][1])
+                pt = Point(points[i+2][0], points[i+2][1], points[i+2][2])
                 marker.points.append(pt)
         self.markerArray.markers.append(marker)
 
-    def addPolygon(self, dist, points, linewidth=0.02):
+    def addPolygon(self, points, linewidth=0.02):
         self.oid = self.oid+1
         self.name = "/polygon"+str(self.oid)
         self.marker = Marker()
@@ -164,11 +164,11 @@ class ScenePublisher (object):
         self.marker.points = []
         for p in points:
                 pt = Point()
-                pt.x = dist; pt.y = p[0]; pt.z = p[1]
+                pt.x = p[0]; pt.y = p[1]; pt.z = p[2]
                 self.marker.points.append(pt)
         #connect last marker to first marker
         pt = Point()
-        pt.x = dist; pt.y = points[0][0]; pt.z = points[0][1]
+        pt.x = points[0][0]; pt.y = points[0][1]; pt.z = points[0][2]
         self.marker.points.append(pt)
 
         self.markerArray.markers.append(self.marker)
