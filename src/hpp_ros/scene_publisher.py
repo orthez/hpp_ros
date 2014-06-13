@@ -141,7 +141,7 @@ class ScenePublisher (object):
                 marker.points.append(pt)
         self.markerArray.markers.append(marker)
 
-    def addPolygon(self, dist, points):
+    def addPolygon(self, dist, points, linewidth=0.02):
         self.oid = self.oid+1
         self.name = "/polygon"+str(self.oid)
         self.marker = Marker()
@@ -150,7 +150,7 @@ class ScenePublisher (object):
         self.marker.header.frame_id = self.name
         self.marker.type = self.marker.LINE_STRIP
         self.marker.action = self.marker.ADD
-        self.marker.scale.x = 0.02
+        self.marker.scale.x = linewidth
         self.marker.scale.y = 1
         self.marker.scale.z = 1
         self.marker.color.r = 1.0
