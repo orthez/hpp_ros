@@ -9,6 +9,7 @@
   <node name="rviz"
 	pkg="rviz"
 	type="rviz"
+	args="-d $(find hpp_ros)/rviz_configs/hpp_ros.rviz"
 	respawn="false">
   </node>
 </launch>

@@ -40,4 +40,8 @@ install(FILES launch/hpp_ros.launch
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
   )
 
+install(FILES rviz_configs/hpp_ros.rviz
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/rviz_configs
+  )
+
 setup_project_finalize()
