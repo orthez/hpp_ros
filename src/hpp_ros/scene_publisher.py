@@ -37,7 +37,7 @@ class Obstacle (object):
 def computeRobotPositionAnchor (self):
     self.transform.transform.rotation = (0.0, 0.0, 0, 1)
     self.transform.transform.translation = (0.0, 0.0, 0.0)
-    self.js.position = self.robotConfig
+    self.js.position = self.robotConfig [:len (self.js.name)]
 
 def computeRobotPositionFreeflyer (self):
     self.transform.transform.rotation = (self.robotConfig [4],
@@ -47,14 +47,14 @@ def computeRobotPositionFreeflyer (self):
     self.transform.transform.translation = (self.robotConfig [0],
                                              self.robotConfig [1],
                                              self.robotConfig [2])
-    self.js.position = self.robotConfig[7:]
+    self.js.position = self.robotConfig[7:len (self.js.name)+7]
 
 def computeRobotPositionPlanar (self):
     theta = .5*self.robotConfig [2]
     self.transform.transform.rotation = (0 , 0, sin (theta), cos (theta))
     self.transform.transform.translation = \
         (self.robotConfig [0], self.robotConfig [1], 0)
-    self.js.position = self.robotConfig[3:]
+    self.js.position = self.robotConfig[3:len (self.js.name)+3]
 
 ## Display of robot and obstacle configurations in Rviz
 #
