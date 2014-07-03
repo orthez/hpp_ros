@@ -26,6 +26,10 @@ set(PROJECT_DESCRIPTION
 )
 set(PROJECT_URL "")
 
+set(${PROJECT_NAME}_HEADERS
+  include/hpp/ros/joint-state.hh
+  )
+
 findpython()
 setup_project()
 
