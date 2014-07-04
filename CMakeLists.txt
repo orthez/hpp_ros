@@ -28,6 +28,7 @@ set(PROJECT_URL "")
 
 set(${PROJECT_NAME}_HEADERS
   include/hpp/ros/joint-state.hh
+  include/hpp/ros/joint-trajectory.hh
   )
 
 findpython()
