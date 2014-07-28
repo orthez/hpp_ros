@@ -111,6 +111,28 @@ class ScenePublisher (object):
         """
         self.objects [name] = Obstacle (name, frameId)
 
+    def addText(self, text, pos):
+        oid = 1
+        name = "/text"+str(oid)
+        marker = Marker()
+        marker.id = oid
+        marker.ns = "/text"
+        marker.header.frame_id = "/map"
+        marker.type = marker.TEXT_VIEW_FACING
+        marker.action = marker.ADD
+        marker.scale.z = 0.2
+        marker.color.r = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 1.0
+        marker.color.a = 1.0
+        marker.pose.orientation.w = 1.0
+        marker.pose.position.x = pos[0]
+        marker.pose.position.y = pos[1]
+        marker.pose.position.z = pos[2]
+        marker.text = text
+        marker.frame_locked=1
+        self.markerArray.markers.append(marker)
+
     def addPolygonFilled(self, points):
         oid = self.oid+1
         name = "/polygonFilled"+str(self.oid)
